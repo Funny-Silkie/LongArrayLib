@@ -1,0 +1,34 @@
+﻿[*.cs]
+
+# CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。
+dotnet_diagnostic.CS8600.severity = error
+
+# CS8602: null 参照の可能性があるものの逆参照です。
+dotnet_diagnostic.CS8602.severity = error
+
+# CS8625: null リテラルを null 非許容参照型に変換できません。
+dotnet_diagnostic.CS8625.severity = error
+
+# IDE0046: 条件式に変換します
+dotnet_diagnostic.IDE0046.severity = silent
+
+# IDE0061: ローカル関数に式本体を使用する
+dotnet_diagnostic.IDE0061.severity = silent
+
+# IDE0290: プライマリ コンストラクターの使用
+dotnet_diagnostic.IDE0290.severity = none
+
+# CS8603: Null 参照戻り値である可能性があります。
+dotnet_diagnostic.CS8603.severity = error
+
+# IDE0090: 'new(...)' を使用する
+dotnet_diagnostic.IDE0090.severity = none
+
+# IDE0301: コレクションの初期化を簡略化します
+dotnet_diagnostic.IDE0301.severity = none
+
+# CS8500: これは、マネージ型のアドレスの取得、サイズの取得、またはそのマネージ型へのポインターの宣言を行います
+dotnet_diagnostic.CS8500.severity = none
+
+# CA1861: 引数として定数配列を使用しない
+dotnet_diagnostic.CA1861.severity = none
