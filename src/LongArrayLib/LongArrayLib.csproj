@@ -10,7 +10,23 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<AssemblyName>Funny_Silkie.LongArrayLib</AssemblyName>
+		<Title>Funny_Silkie.LongArrayLib</Title>
+		<PackageVersion>1.0.0</PackageVersion>
+		<Authors>Funny_Silkie</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/Funny-Silkie/LongArrayLib</RepositoryUrl>
+		<PackageTags>dotnet;array;library;csharp</PackageTags>
+		<Description>Array with 64-signed integer length.</Description>
+	</PropertyGroup>
+
 	<ItemGroup>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 		<None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 
