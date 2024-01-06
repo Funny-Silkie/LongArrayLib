@@ -32,3 +32,6 @@ dotnet_diagnostic.CS8500.severity = none
 
 # CA1861: 引数として定数配列を使用しない
 dotnet_diagnostic.CA1861.severity = none
+
+# CA1835: 'ReadAsync' および 'WriteAsync' で 'Memory' ベースのオーバーロードを優先的に使用する
+dotnet_diagnostic.CA1835.severity = none
