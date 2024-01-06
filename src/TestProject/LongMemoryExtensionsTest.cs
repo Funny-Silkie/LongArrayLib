@@ -1,5 +1,8 @@
 ﻿using LongArrayLib;
 using System;
+using System.Buffers;
+using System.Linq;
+using TestProject.Utils;
 
 namespace TestProject
 {
@@ -16,7 +19,7 @@ namespace TestProject
         public void ToLongArrayFromMemory()
         {
             var memory = new Memory<string>(["hoge", "fuga", "piyo"]);
-            LongArray<string> array = memory.ToLongArray();
+            using LongArray<string> array = memory.ToLongArray();
 
             Assert.Multiple(() =>
             {
@@ -34,7 +37,7 @@ namespace TestProject
         public void ToLongArrayFromReadOnlyMemory()
         {
             var memory = new ReadOnlyMemory<string>(["hoge", "fuga", "piyo"]);
-            LongArray<string> array = memory.ToLongArray();
+            using LongArray<string> array = memory.ToLongArray();
 
             Assert.Multiple(() =>
             {
@@ -52,7 +55,7 @@ namespace TestProject
         public void ToLongArrayFromSpan()
         {
             var span = new Span<string>(["hoge", "fuga", "piyo"]);
-            LongArray<string> array = span.ToLongArray();
+            using LongArray<string> array = span.ToLongArray();
 
             Assert.Multiple(() =>
             {
@@ -70,7 +73,7 @@ namespace TestProject
         public void ToLongArrayFromReadOnlySpan()
         {
             var span = new ReadOnlySpan<string>(["hoge", "fuga", "piyo"]);
-            LongArray<string> array = span.ToLongArray();
+            using LongArray<string> array = span.ToLongArray();
 
             Assert.Multiple(() =>
             {
@@ -88,13 +91,48 @@ namespace TestProject
         public void ToLongArrayFromString()
         {
             var text = "abcdefg1234567ABCDEFG";
-            LongArray<char> array = text.ToLongArray();
+            using LongArray<char> array = text.ToLongArray();
 
             Assert.Multiple(() =>
             {
                 Assert.That(array, Has.Length.EqualTo(text.Length));
                 for (int i = 0; i < text.Length; i++) Assert.That(array[i], Is.EqualTo(text[i]));
             });
+        }
+
+        /// <summary>
+        /// <see cref="LongMemoryExtensions.ToLongArray{T}(ReadOnlySequence{T})"/>を検証します。
+        /// </summary>
+        [Test]
+        public void ToLongArrayFromReadOnlySequence()
+        {
+            // sequencial
+            {
+                var sequence = new ReadOnlySequence<string>(["hoge", "fuga", "piyo"]);
+                using LongArray<string> array = sequence.ToLongArray();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(array, Has.Length.EqualTo(3));
+                    Assert.That(array[0], Is.EqualTo("hoge"));
+                    Assert.That(array[1], Is.EqualTo("fuga"));
+                    Assert.That(array[2], Is.EqualTo("piyo"));
+                });
+            }
+
+            // separated
+            {
+                var (start, end) = TestSegment<byte>.CreateCouple(1, 2);
+                var sequence = new ReadOnlySequence<byte>(start, 0, end, 1);
+                using LongArray<byte> array = sequence.ToLongArray();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(array, Has.Length.EqualTo(2));
+                    Assert.That(array[0], Is.EqualTo(1));
+                    Assert.That(array[1], Is.EqualTo(2));
+                });
+            }
         }
 
 #pragma warning disable NUnit2045 // Use Assert.Multiple
@@ -411,6 +449,43 @@ namespace TestProject
                 Assert.Throws<ArgumentOutOfRangeException>(() => array.AsMemory(^0..));
                 Assert.Throws<ArgumentOutOfRangeException>(() => array.AsMemory(..^5));
                 Assert.Throws<OverflowException>(() => new LongArray<byte>(int.MaxValue + 3L).AsMemory(0..^0));
+            });
+        }
+
+        /// <summary>
+        /// <see cref="LongMemoryExtensions.AsReadOnlySequence{T}(LongArray{T}?)"/>を検証します。
+        /// </summary>
+        [Test]
+        public void AsReadOnlySequenceTest()
+        {
+            using LongArray<long> array = LongArray.Create([0L, -1L, -2L, 3L]);
+
+            // sequencial
+            {
+                ReadOnlySequence<long> sequence = array.AsReadOnlySequence();
+
+                Assert.That(sequence.ToArray().SequenceEqual(array), Is.True);
+            }
+
+            // separated
+            {
+                ReadOnlySequence<long> sequence = array.AsReadOnlySequence(2);
+                ReadOnlySequence<long>.Enumerator enumerator = sequence.GetEnumerator();
+                Assert.Multiple(() =>
+                {
+                    Assert.That(enumerator.MoveNext(), Is.True);
+                    Assert.That(enumerator.Current.Span.SequenceEqual([0L, -1L]), Is.True);
+                    Assert.That(enumerator.MoveNext(), Is.True);
+                    Assert.That(enumerator.Current.Span.SequenceEqual([-2L, 3L]), Is.True);
+                });
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => LongMemoryExtensions.AsReadOnlySequence<byte>(null, -1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => LongMemoryExtensions.AsReadOnlySequence(LongArray<byte>.Empty, -1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => LongMemoryExtensions.AsReadOnlySequence(array, -1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => LongMemoryExtensions.AsReadOnlySequence(array, 0));
             });
         }
     }
