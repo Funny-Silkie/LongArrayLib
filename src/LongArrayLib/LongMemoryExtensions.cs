@@ -1,5 +1,6 @@
 ﻿using LongArrayLib.Internal;
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -311,6 +312,28 @@ namespace LongArrayLib
         }
 
         /// <summary>
+        /// <see cref="ReadOnlySequence{T}"/>に変換します。
+        /// </summary>
+        /// <typeparam name="T">要素の型</typeparam>
+        /// <param name="array">変換する配列</param>
+        /// <param name="maxChunkSize">チャンクの最大サイズ</param>
+        /// <returns>変換後の値</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxChunkSize"/>が0未満または<paramref name="array"/>が<see langword="null"/>でないときに0</exception>
+        public static ReadOnlySequence<T> AsReadOnlySequence<T>(this LongArray<T>? array, int maxChunkSize = int.MaxValue)
+        {
+            if (array is null || array.Length == 0L)
+            {
+                ThrowHelper.ThrowIfNegative(maxChunkSize);
+                return ReadOnlySequence<T>.Empty;
+            }
+
+            ThrowHelper.ThrowIfNegativeOrZero(maxChunkSize);
+
+            (LongArraySegment<T> start, LongArraySegment<T> end) = LongArraySegment<T>.Create(array, maxChunkSize);
+            return new ReadOnlySequence<T>(start, 0, end, end.Memory.Length);
+        }
+
+        /// <summary>
         /// <see cref="LongArray{T}"/>へ変換します。
         /// </summary>
         /// <typeparam name="T">要素の型</typeparam>
@@ -352,6 +375,28 @@ namespace LongArrayLib
         public static LongArray<T> ToLongArray<T>(this ReadOnlySpan<T> span)
         {
             return new LongArray<T>(ref MemoryMarshal.GetReference(span), span.Length);
+        }
+
+        /// <summary>
+        /// <see cref="LongArray{T}"/>へ変換します。
+        /// </summary>
+        /// <typeparam name="T">要素の型</typeparam>
+        /// <param name="sequence">変換する値</param>
+        /// <returns>変換後の値</returns>
+        public static LongArray<T> ToLongArray<T>(this ReadOnlySequence<T> sequence)
+        {
+            if (sequence.Length == 0L) return LongArray<T>.Empty;
+
+            var result = new LongArray<T>(sequence.Length, false);
+            long offset = 0L;
+            foreach (ReadOnlyMemory<T> memory in sequence)
+            {
+                int currentLength = memory.Length;
+                memory.Span.CopyTo(result.AsSpan(offset, currentLength));
+                offset += currentLength;
+            }
+
+            return result;
         }
 
         /// <summary>
